@@ -1,6 +1,7 @@
 
 <script context="module">
-	import GetDatabase from '$lib/Components/getDatabase.svelte';
+
+	import GetTransactions from '$lib/Components/getTransactions.svelte';
 	import * as api from '$lib/api.js';
 	import { respond } from '$lib/respond.js';
 	let notionApi = import.meta.env.VITE_NOTION_API;
@@ -31,15 +32,12 @@
 				<img src="svelte-welcome.png" alt="Welcome" />
 			</picture>
 		</div>
-		<GetDatabase />
+		
 	</h1>
 
-	{db.id}
-	<h2>
-		try editing <strong>src/routes/index.svelte</strong>
-	</h2>
+	<GetTransactions />
 
-	<a sveltekit:prefetch href="/testing">TEST</a>
+	
 	
 </section>
 
