@@ -1,23 +1,6 @@
 
 <script context="module">
-
 	import GetTransactions from '$lib/Components/getTransactions.svelte';
-	import * as api from '$lib/api.js';
-	import { respond } from '$lib/respond.js';
-	let notionApi = import.meta.env.VITE_NOTION_API;
-	let query = 'users/:id';
-	let db = {};
-
-	async function getDatabases (event) {
-		
-		const body = await api.get({
-			token: notionApi,
-			params: 'databases/72ed0bc8a5c24fde86b8e13f4589f465',
-		})
-			
-		return respond(body);	
-	}
-
 </script>
 
 <svelte:head>

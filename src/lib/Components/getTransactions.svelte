@@ -1,44 +1,34 @@
 <script>
   import { onMount } from 'svelte';
   import AddToNotion from '$lib/Components/addToNotion.svelte';
-
-  let upApi = import.meta.env.VITE_UP_API;
+  import { trans } from '$lib/transactionStore.js';
+  import { UP_API_URL } from '$lib/variables.js';
   let transactions = [];  
 
+  import * as api from '$lib/api.js';
+    import {
+        respond
+    } from '$lib/respond.js';
+
   onMount(async () => {
-    var url =
-      "https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions?filter[category]=groceries";
+    const url = 'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1/accounts/582be906-8f42-41c6-8177-b53d295c1343/';
+    const body = await api.get(
+    {token: UP_API_URL, params: 'transactions?filter[category]=groceries'},
+    url)
+   
+    const accountDetails = await respond(body);
+    const { body: { data } } = accountDetails;
 
-    
-    const res = await fetch(url, {
-      headers: {
-        method: "GET",
-        Authorization:
-          "Bearer " + upApi
-      }
-    });
-
-    const accountDetails = await res.json();
-    const { data } = accountDetails;
-    
-    console.log('transactions: ', data);
+    console.log(data)
 
     transactions = data;
-    AddToNotion.data = transactions;
+
+    trans.set(transactions);
    
   });
 
 </script>
 
-<!-- <div class="totals">
-  <h3>Spent total</h3>
-  <p>${spent}</p>
-  <h3>Saved total</h3>
-  <p>${saved}</p>
-  <h3>Transactions Total</h3>
-  <p>${total}</p>
-</div>
--->
 <div class="container">
   {#await transactions}
     <h1>....Loading transactions </h1>
@@ -51,7 +41,7 @@
         </li>
       </ul>
     {/each}
-    <AddToNotion data={transactions}/>
+    <AddToNotion />
   {/await}
 </div>  
 
