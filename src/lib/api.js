@@ -14,6 +14,10 @@ async function send({ data, method, token, url }) {
 		opts.headers['Notion-Version'] = '2021-05-13';
 	}
 
+	if (token.params === undefined) {
+		token.params = '';
+	}
+
 	console.log('Headers:', opts, 'URL: ', url, 'Token: ', token);
 
 	// return await buildQuery;
