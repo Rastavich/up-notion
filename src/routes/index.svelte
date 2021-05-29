@@ -1,54 +1,46 @@
-
-<script context="module">
+<script>
+	import Tabs from '$lib/Components/Tabs.svelte';
 	import GetTransactions from '$lib/Components/getTransactions.svelte';
+	import { UP_API_URL } from '$lib/variables.js';
+	import { onMount } from 'svelte';
+	import * as api from '$lib/api.js';
+	import { respond } from '$lib/respond.js';
+	let tabItems = [];
+	let currentTab;
+
+	onMount(async () => {
+		const url = 'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1/categories';
+		const body = await api.get({ token: UP_API_URL, params: '' }, url);
+
+		const response = await respond(body);
+		console.log(response);
+		const {
+			body: { data }
+		} = response;
+
+		console.log(data);
+
+		data.forEach((item, index) => {
+			tabItems[index] = { label: item.id, value: index + 1 };
+		});
+	});
+
+	$: currentTab;
+	console.log(currentTab);
+
 </script>
 
 <svelte:head>
 	<title>Home</title>
 </svelte:head>
 
-<section>
-	<h1>
-		<div class="welcome">
-			<picture>
-				<source srcset="svelte-welcome.webp" type="image/webp" />
-				<img src="svelte-welcome.png" alt="Welcome" />
-			</picture>
-		</div>
-		
-	</h1>
+<Tabs bind:activeTabValue={currentTab} items={tabItems} />
 
-	<GetTransactions />
+{#if currentTab}
+	{#key currentTab}
+		<GetTransactions bind:itemId={tabItems[currentTab - 1].label} />
+	{/key}
+{/if}
 
-	
-	
-</section>
-
-<style style lang="postcss">
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 1;
-	}
-
-	h1 {
-		width: 100%;
-	}
-
-	.welcome {
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
-
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
-	}
+<style>
 </style>

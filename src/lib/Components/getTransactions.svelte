@@ -1,21 +1,24 @@
 <script>
 	import { onMount } from 'svelte';
 	import AddToNotion from '$lib/Components/addToNotion.svelte';
-	import { trans } from '$lib/transactionStore.js';
+	import { trans, transChecked } from '$lib/transactionStore.js';
 	import { UP_API_URL } from '$lib/variables.js';
 	let transactions = [];
+	let checkedTrans = [];
+	export let itemId;
 	let links = {};
-  let error;
-  
+	let error;
 
 	import * as api from '$lib/api.js';
 	import { respond } from '$lib/respond.js';
+
+	console.log(itemId);
 
 	onMount(async () => {
 		const url =
 			'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1/accounts/582be906-8f42-41c6-8177-b53d295c1343/';
 		const body = await api.get(
-			{ token: UP_API_URL, params: 'transactions?filter[category]=groceries' },
+			{ token: UP_API_URL, params: 'transactions?filter[category]=' + itemId },
 			url
 		);
 
@@ -28,12 +31,12 @@
 
 		transactions = data;
 		links = accountDetails.body.links;
-
+		console.log(transactions);
 		trans.set(transactions);
 	});
 
 	async function page(direction) {
-    let error = 'No other pages in that direction';
+		let error = 'No other pages in that direction';
 		let page;
 
 		if (direction == 'next') {
@@ -43,9 +46,9 @@
 			page = links.prev;
 		}
 
-    if (page == null) {
-      return error;
-    }
+		if (page == null) {
+			return error;
+		}
 
 		const body = await api.get({ token: UP_API_URL }, page);
 		const accountDetails = await respond(body);
@@ -59,51 +62,89 @@
 		trans.set(transactions);
 	}
 
+	function checkedTransactions(transaction) {
+		transChecked.update((checkedTrans) => [...checkedTrans, transaction]);
+
+		console.log('Trans Checked: ', $transChecked);
+	}
 
 </script>
 
 <div class="container">
-  {#if error}
-    {error}
-  {/if}
-	{#await transactions}
-		<h1>....Loading transactions</h1>
-	{:then}
-		{#each transactions as transaction}
-			<ul>
-				<li>
-					{transaction.attributes.description}&nbsp; Amount:
-					{transaction.attributes.amount.value}
-				</li>
-			</ul>
-		{/each}
+	<div class="header">
+		<button on:click={() => page('previous')}>Previous</button>
+		<button on:click={() => page('next')}>Next</button>
+	</div>
 
-		<div class="notion-add">
-			<AddToNotion />
-		</div>
-	{/await}
-</div>
+	<div class="transactions">
+		{#if error}
+			{error}
+		{/if}
+		{#await transactions}
+			<h1>....Loading transactions</h1>
+		{:then}
+			{#each transactions as transaction}
+				<ul>
+					<li>
+						<div class="transaction">
+							<div>
+								<input
+									type="checkbox"
+									on:change={() => {
+										checkedTransactions(transaction);
+									}}
+								/>
+							</div>
+							<div>
+								{transaction.attributes.description}&nbsp; Amount:
+							</div>
+							<div>
+								{transaction.attributes.createdAt}
+							</div>
+							<div>
+								{transaction.attributes.amount.value}
+							</div>
+						</div>
+					</li>
+				</ul>
+			{/each}
 
-<div>
-	<button on:click={() => page('previous')}>Previous</button>
-	<button on:click={() => page('next')}>Next</button>
+			<div class="notion-add">
+				<AddToNotion buttonText="Add all transactions to notion" checked="false" />
+				<AddToNotion buttonText="Add ONLY CHECKED transactions to notion" checked="true" />
+			</div>
+		{/await}
+		{#if transactions.length === 0}
+			<p>No transactions in this category - try another.</p>
+		{/if}
+	</div>
 </div>
 
 <style>
 	.container {
-		display: grid;
-		grid-template-columns: auto auto;
-		margin-top: 2rem;
+		padding: 2rem;
 	}
-	p {
-		margin-left: 10px;
-		margin-right: 10px;
+	.transaction {
+		display: grid;
+		grid-template-columns: 3rem 20rem 15rem 20rem;
+		border-bottom: 1px solid lightgrey;
+	}
+	.transactions {
+	}
+
+	.header {
+		position: sticky;
+		height: 5rem;
+		align-content: center;
+		margin: 0 auto;
 	}
 	ul {
-		padding: 0;
-		list-style-type: none;
-		margin-block-end: 0;
-		margin-right: 5rem;
+		display: grid;
+		flex-wrap: wrap;
+		padding-left: 0;
+		margin-bottom: 0;
+		list-style: none;
+		width: 20rem;
 	}
 	li {
 		box-sizing: border-box;

@@ -1,6 +1,7 @@
 <script>
 	import Header from '$lib/Header/index.svelte';
 	import '../app.css';
+
 </script>
 
 <Header />
@@ -15,9 +16,9 @@
 
 <style>
 	main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-column: 1/3;
+		grid-template-columns: 20rem 50rem;
 		padding: 1rem;
 		width: 100%;
 		max-width: 1024px;
@@ -42,4 +43,5 @@
 			padding: 40px 0;
 		}
 	}
+
 </style>
