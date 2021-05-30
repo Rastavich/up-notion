@@ -1,20 +1,16 @@
 <script>
-	import { onMount } from 'svelte';
+	import * as api from '$lib/api.js';
+	import { respond } from '$lib/respond.js';
 	import AddToNotion from '$lib/Components/addToNotion.svelte';
 	import { trans, transChecked } from '$lib/transactionStore.js';
 	import { UP_API_URL } from '$lib/variables.js';
-	let transactions = [];
-	let checkedTrans = [];
+	
 	export let itemId;
+	let transactions = [];
 	let links = {};
 	let error;
 
-	import * as api from '$lib/api.js';
-	import { respond } from '$lib/respond.js';
-
-	console.log(itemId);
-
-	onMount(async () => {
+	async function getTransactions() {
 		const url =
 			'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1/accounts/582be906-8f42-41c6-8177-b53d295c1343/';
 		const body = await api.get(
@@ -27,13 +23,13 @@
 			body: { data }
 		} = accountDetails;
 
-		console.log(accountDetails);
-
 		transactions = data;
 		links = accountDetails.body.links;
 		console.log(transactions);
 		trans.set(transactions);
-	});
+
+		return transactions;
+	}
 
 	async function page(direction) {
 		let error = 'No other pages in that direction';
@@ -46,6 +42,7 @@
 			page = links.prev;
 		}
 
+		// TODO: Handle no next or previous page a lot better
 		if (page == null) {
 			return error;
 		}
@@ -64,9 +61,9 @@
 
 	function checkedTransactions(transaction) {
 		transChecked.update((checkedTrans) => [...checkedTrans, transaction]);
-
-		console.log('Trans Checked: ', $transChecked);
 	}
+
+	const promise = getTransactions();
 
 </script>
 
@@ -80,43 +77,44 @@
 		{#if error}
 			{error}
 		{/if}
-		{#await transactions}
+		{#await promise}
 			<h1>....Loading transactions</h1>
-		{:then}
-			{#each transactions as transaction}
-				<ul>
-					<li>
-						<div class="transaction">
-							<div>
-								<input
-									type="checkbox"
-									on:change={() => {
-										checkedTransactions(transaction);
-									}}
-								/>
+		{:then transactions}
+			{#if transactions.length === 0}
+				<p>No transactions in this category - try another.</p>
+			{:else}
+				{#each transactions as transaction}
+					<ul>
+						<li>
+							<div class="transaction">
+								<div>
+									<input
+										type="checkbox"
+										on:change={() => {
+											checkedTransactions(transaction);
+										}}
+									/>
+								</div>
+								<div>
+									{transaction.attributes.description}&nbsp; Amount:
+								</div>
+								<div>
+									{transaction.attributes.createdAt}
+								</div>
+								<div>
+									{transaction.attributes.amount.value}
+								</div>
 							</div>
-							<div>
-								{transaction.attributes.description}&nbsp; Amount:
-							</div>
-							<div>
-								{transaction.attributes.createdAt}
-							</div>
-							<div>
-								{transaction.attributes.amount.value}
-							</div>
-						</div>
-					</li>
-				</ul>
-			{/each}
+						</li>
+					</ul>
+				{/each}
 
-			<div class="notion-add">
-				<AddToNotion buttonText="Add all transactions to notion" checked="false" />
-				<AddToNotion buttonText="Add ONLY CHECKED transactions to notion" checked="true" />
-			</div>
+				<div class="notion-add">
+					<AddToNotion buttonText="Add all transactions to notion" checked="false" />
+					<AddToNotion buttonText="Add ONLY CHECKED transactions to notion" checked="true" />
+				</div>
+			{/if}
 		{/await}
-		{#if transactions.length === 0}
-			<p>No transactions in this category - try another.</p>
-		{/if}
 	</div>
 </div>
 
@@ -129,9 +127,6 @@
 		grid-template-columns: 3rem 20rem 15rem 20rem;
 		border-bottom: 1px solid lightgrey;
 	}
-	.transactions {
-	}
-
 	.header {
 		position: sticky;
 		height: 5rem;
@@ -148,9 +143,6 @@
 	}
 	li {
 		box-sizing: border-box;
-	}
-	button {
-		margin-top: 3rem;
 	}
 
 	.notion-add {
