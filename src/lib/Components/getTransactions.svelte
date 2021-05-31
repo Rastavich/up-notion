@@ -34,6 +34,7 @@
 	async function page(direction) {
 		let error = 'No other pages in that direction';
 		let page;
+		promise = '';
 
 		if (direction == 'next') {
 			page = links.next;
@@ -57,13 +58,14 @@
 		links = accountDetails.body.links;
 
 		trans.set(transactions);
+		promise = transactions;
 	}
 
 	function checkedTransactions(transaction) {
 		transChecked.update((checkedTrans) => [...checkedTrans, transaction]);
 	}
 
-	const promise = getTransactions();
+	let promise = getTransactions();
 
 </script>
 
