@@ -4,17 +4,26 @@
 	import AddToNotion from '$lib/Components/addToNotion.svelte';
 	import { trans, transChecked } from '$lib/transactionStore.js';
 	import { UP_API_URL } from '$lib/variables.js';
-	
+
 	export let itemId;
 	let transactions = [];
+	let transactionsTest = [];
+
+	let nextDisabled = true;
+	let prevDisabled = true;
 	let links = {};
 	let error;
+	let loadingNext = false;
+	let pageError = 'No other pages in that direction';
 
 	async function getTransactions() {
-		const url =
-			'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1/accounts/582be906-8f42-41c6-8177-b53d295c1343/';
+		const url = 'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1';
 		const body = await api.get(
-			{ token: UP_API_URL, params: 'transactions?filter[category]=' + itemId },
+			{
+				token: UP_API_URL,
+				params:
+					'/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions?filter[category]=' + itemId
+			},
 			url
 		);
 
@@ -23,18 +32,11 @@
 			body: { data }
 		} = accountDetails;
 
-		transactions = data;
-		links = accountDetails.body.links;
-		console.log(transactions);
-		trans.set(transactions);
-
-		return transactions;
+		setTransactions(body, data);
 	}
 
 	async function page(direction) {
-		let error = 'No other pages in that direction';
-		let page;
-		promise = '';
+		let page = null;
 
 		if (direction == 'next') {
 			page = links.next;
@@ -45,17 +47,53 @@
 
 		// TODO: Handle no next or previous page a lot better
 		if (page == null) {
-			return error;
+			return pageError;
 		}
+
+		promise = '';
+		transactions = '';
+		loadingNext = true;
 
 		const body = await api.get({ token: UP_API_URL }, page);
 		const accountDetails = await respond(body);
-
 		const {
 			body: { data }
 		} = accountDetails;
-		transactions = data;
-		links = accountDetails.body.links;
+
+		setTransactions(body, data);
+	}
+
+	function setTransactions(body, data) {
+		links = body.links;
+
+		links.next != null ? (nextDisabled = false) : (nextDisabled = true);
+		links.prev != null ? (prevDisabled = false) : (prevDisabled = true);
+
+		data.forEach((element, index) => {
+			const {
+				attributes: {
+					amount: { value }
+				}
+			} = element;
+			const {
+				attributes: { description }
+			} = element;
+			const {
+				attributes: { createdAt }
+			} = element;
+
+			transactions = [
+				...transactions,
+				{
+					id: index,
+					transValue: value,
+					transDescription: description,
+					transCreated: createdAt
+				}
+			];
+		});
+
+		loadingNext = false;
 
 		trans.set(transactions);
 		promise = transactions;
@@ -71,8 +109,8 @@
 
 <div class="container">
 	<div class="header">
-		<button on:click={() => page('previous')}>Previous</button>
-		<button on:click={() => page('next')}>Next</button>
+		<button disabled={prevDisabled} on:click={() => page('previous')}>Previous</button>
+		<button disabled={nextDisabled} on:click={() => page('next')}>Next</button>
 	</div>
 
 	<div class="transactions">
@@ -82,8 +120,10 @@
 		{#await promise}
 			<h1>....Loading transactions</h1>
 		{:then transactions}
-			{#if transactions.length === 0}
+			{#if transactions.length === 0 && loadingNext === false}
 				<p>No transactions in this category - try another.</p>
+			{:else if loadingNext === true}
+				<h1>Loading...</h1>
 			{:else}
 				{#each transactions as transaction}
 					<ul>
@@ -98,13 +138,13 @@
 									/>
 								</div>
 								<div>
-									{transaction.attributes.description}&nbsp; Amount:
+									{transaction.transDescription}
 								</div>
 								<div>
-									{transaction.attributes.createdAt}
+									{transaction.transValue}
 								</div>
 								<div>
-									{transaction.attributes.amount.value}
+									{transaction.transCreated}
 								</div>
 							</div>
 						</li>

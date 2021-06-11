@@ -1,32 +1,15 @@
 <script>
-	import Tabs from '$lib/Components/Tabs.svelte';
 	import GetTransactions from '$lib/Components/getTransactions.svelte';
-	import { UP_API_URL } from '$lib/variables.js';
 	import { onMount } from 'svelte';
-	import * as api from '$lib/api.js';
-	import { respond } from '$lib/respond.js';
+	import { categories } from '$lib/categoryStore.js';
 	let tabItems = [];
-	let currentTab;
+	let selectOption;
 
 	onMount(async () => {
-		const url = 'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1/categories';
-		const body = await api.get({ token: UP_API_URL, params: '' }, url);
-
-		const response = await respond(body);
-		console.log(response);
-		const {
-			body: { data }
-		} = response;
-
-		console.log(data);
-
-		data.forEach((item, index) => {
+		$categories.forEach((item, index) => {
 			tabItems[index] = { label: item.id, value: index + 1 };
 		});
 	});
-
-	$: currentTab;
-	console.log(currentTab);
 
 </script>
 
@@ -34,13 +17,17 @@
 	<title>Home</title>
 </svelte:head>
 
-<Tabs bind:activeTabValue={currentTab} items={tabItems} />
-
-{#if currentTab}
-	{#key currentTab}
-		<GetTransactions bind:itemId={tabItems[currentTab - 1].label} />
-	{/key}
-{/if}
-
-<style>
-</style>
+<div>
+	<select bind:value={selectOption}>
+		{#each $categories as item}
+			<option value={item.id}>{item.id}</option>
+		{/each}
+	</select>
+</div>
+<div>
+	{#if selectOption && selectOption != 'Please select a category'}
+		{#key selectOption}
+			<GetTransactions bind:itemId={selectOption} />
+		{/key}
+	{/if}
+</div>
