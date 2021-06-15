@@ -6,9 +6,8 @@
 	import { UP_API_URL } from '$lib/variables.js';
 
 	export let itemId;
+	
 	let transactions = [];
-	let transactionsTest = [];
-
 	let nextDisabled = true;
 	let prevDisabled = true;
 	let links = {};
@@ -16,6 +15,9 @@
 	let loadingNext = false;
 	let pageError = 'No other pages in that direction';
 
+	/**
+	 *
+	 */
 	async function getTransactions() {
 		const url = 'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1';
 		const body = await api.get(
@@ -35,6 +37,11 @@
 		setTransactions(body, data);
 	}
 
+	/**
+	 * Pagination function which takes the direction and returns the new dataset for that direction.
+	 *
+	 * @param {string} direction
+	 */
 	async function page(direction) {
 		let page = null;
 
@@ -63,6 +70,11 @@
 		setTransactions(body, data);
 	}
 
+	/**
+	 *
+	 * @param body
+	 * @param data
+	 */
 	function setTransactions(body, data) {
 		links = body.links;
 
