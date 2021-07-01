@@ -10,7 +10,6 @@
 			tabItems[index] = { label: item.id, value: index + 1 };
 		});
 	});
-
 </script>
 
 <svelte:head>
@@ -27,7 +26,11 @@
 <div>
 	{#if selectOption && selectOption != 'Please select a category'}
 		{#key selectOption}
-			<GetTransactions bind:itemId={selectOption} />
+			{#if selectOption == 'All categories'}
+				<GetTransactions filter={false} bind:itemId={selectOption} />
+			{:else}
+				<GetTransactions filter={true} bind:itemId={selectOption} />
+			{/if}
 		{/key}
 	{/if}
 </div>

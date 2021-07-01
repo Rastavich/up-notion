@@ -7,6 +7,10 @@ export const categories = readable([
 	},
 	{
 		type: 'categories',
+		id: 'All categories'
+	},
+	{
+		type: 'categories',
 		id: 'games-and-software'
 	},
 	{

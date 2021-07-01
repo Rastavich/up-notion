@@ -125,6 +125,9 @@
 		);
 
 		const db = await respond(body);
+		if (db) {
+			transChecked.set([]);
+		}
 	}
 
 	function addToNotion() {
@@ -136,7 +139,6 @@
 			$transChecked.forEach(getBody);
 		}
 	}
-
 </script>
 
 <button on:click={addToNotion}>{buttonText}</button>

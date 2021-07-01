@@ -6,11 +6,13 @@
 	import { UP_API_URL } from '$lib/variables.js';
 
 	export let itemId;
-	
+	export let filter;
+
 	let transactions = [];
 	let nextDisabled = true;
 	let prevDisabled = true;
 	let links = {};
+	let slug;
 	let error;
 	let loadingNext = false;
 	let pageError = 'No other pages in that direction';
@@ -20,11 +22,15 @@
 	 */
 	async function getTransactions() {
 		const url = 'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1';
+
+		filter
+			? (slug =
+					'/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions?filter[category]=' + itemid)
+			: (slug = '/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions');
 		const body = await api.get(
 			{
 				token: UP_API_URL,
-				params:
-					'/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions?filter[category]=' + itemId
+				params: slug
 			},
 			url
 		);
@@ -116,7 +122,6 @@
 	}
 
 	let promise = getTransactions();
-
 </script>
 
 <div class="container">
@@ -202,5 +207,4 @@
 	.notion-add {
 		margin-top: 2rem;
 	}
-
 </style>
