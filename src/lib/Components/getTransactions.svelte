@@ -7,6 +7,7 @@
 
 	export let itemId;
 	export let filter;
+	export let selectMonth;
 
 	let transactions = [];
 	let nextDisabled = true;
@@ -22,11 +23,17 @@
 	 */
 	async function getTransactions() {
 		const url = 'https://thingproxy.freeboard.io/fetch/https://api.up.com.au/api/v1';
+		console.log(itemId);
 
-		filter
-			? (slug =
-					'/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions?filter[category]=' + itemid)
-			: (slug = '/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions');
+		if (filter) {
+			slug =
+				'/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions?filter[category]=' + itemId;
+		} else if (filter && selectMonth) {
+			slug =
+				'/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions?filter[category]=' + itemId;
+		} else {
+			slug = '/accounts/582be906-8f42-41c6-8177-b53d295c1343/transactions';
+		}
 		const body = await api.get(
 			{
 				token: UP_API_URL,
@@ -84,21 +91,22 @@
 	function setTransactions(body, data) {
 		links = body.links;
 
-		links.next != null ? (nextDisabled = false) : (nextDisabled = true);
-		links.prev != null ? (prevDisabled = false) : (prevDisabled = true);
+		console.log(links.next);
+
+		!links.next ? (nextDisabled = true) : (nextDisabled = false);
+		!links.prev ? (prevDisabled = true) : (prevDisabled = false);
 
 		data.forEach((element, index) => {
 			const {
 				attributes: {
+					description,
+					createdAt,
 					amount: { value }
 				}
 			} = element;
-			const {
-				attributes: { description }
-			} = element;
-			const {
-				attributes: { createdAt }
-			} = element;
+
+			// Format the date
+			let createdDate = new Date(createdAt);
 
 			transactions = [
 				...transactions,
@@ -106,7 +114,7 @@
 					id: index,
 					transValue: value,
 					transDescription: description,
-					transCreated: createdAt
+					transCreated: createdDate.toLocaleString()
 				}
 			];
 		});
